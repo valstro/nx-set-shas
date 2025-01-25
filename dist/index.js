@@ -64904,7 +64904,8 @@ let BASE_DEPLOY_SHA;
         const branch = ref.startsWith('refs/heads/')
             ? ref.replace('refs/heads/', '')
             : '';
-        const deployResult = yield findSuccessfulBranchDeployment(owner, repo, branch);
+        const prEnv = `dev-${github.context.payload.pull_request.number}`;
+        const deployResult = yield findSuccessfulBranchDeployment(owner, repo, prEnv);
         BASE_DEPLOY_SHA = deployResult;
         if (!deployResult) {
             const baseResult = (0, child_process_1.spawnSync)('git', ['merge-base', `origin/${mainBranchName}`, `origin/${branch}`], { encoding: 'utf-8' });
@@ -65080,14 +65081,14 @@ function stripNewLineEndings(string) {
 /**
  * Find last successful deployment on the branch
  */
-function findSuccessfulBranchDeployment(owner, repo, branch) {
+function findSuccessfulBranchDeployment(owner, repo, env) {
     return __awaiter(this, void 0, void 0, function* () {
         const octokit = new ProxifiedClient();
         // GraphQL query to get deployments and their statuses
         const query = `
-      query($owner: String!, $repo: String!, $branch: String!) {
+      query($owner: String!, $repo: String!, $env: String!) {
         repository(owner: $owner, name: $repo) {
-          deployments(last: 50, environments: ["production"], refName: $branch) {
+          deployments(last: 10, environments: [$env]) {
             nodes {
               id
               createdAt
@@ -65112,15 +65113,14 @@ function findSuccessfulBranchDeployment(owner, repo, branch) {
         const response = yield octokit.graphql(query, {
             owner,
             repo,
-            branch: `refs/heads/${branch}`,
+            env,
         });
         const deployments = response.repository.deployments.nodes;
         // Find the last successful deployment
         const successfulDeployment = deployments.find((deployment) => { var _a; return ((_a = deployment.latestStatus) === null || _a === void 0 ? void 0 : _a.state) === 'SUCCESS'; });
         if (successfulDeployment) {
-            core.info(`Found successful deployment for branch ${branch}:`);
+            core.info(`Found successful deployment for env: ${env}:`);
             core.info(`ID: ${successfulDeployment.id}`);
-            core.info(`Environment: ${successfulDeployment.environment}`);
             core.info(`Created at: ${successfulDeployment.createdAt}`);
             if (successfulDeployment.commit) {
                 core.info(`Git SHA: ${successfulDeployment.commit.oid}`);
@@ -65129,7 +65129,7 @@ function findSuccessfulBranchDeployment(owner, repo, branch) {
             }
         }
         else {
-            core.info(`No successful deployments found for branch: ${branch}`);
+            core.info(`No successful deployments found for env: ${env}`);
         }
         return undefined;
     });

@@ -56,12 +56,14 @@ let BASE_DEPLOY_SHA: string;
     const branch = ref.startsWith('refs/heads/')
       ? ref.replace('refs/heads/', '')
       : '';
+    const prEnv = `dev-${github.context.payload.pull_request.number}`;
 
     const deployResult = await findSuccessfulBranchDeployment(
       owner,
       repo,
-      branch,
+      prEnv,
     );
+
     BASE_DEPLOY_SHA = deployResult;
 
     if (!deployResult) {
@@ -294,7 +296,7 @@ function stripNewLineEndings(string: string): string {
 async function findSuccessfulBranchDeployment(
   owner: string,
   repo: string,
-  branch: string,
+  env: string,
 ): Promise<string | undefined> {
   const octokit = new ProxifiedClient();
 
@@ -320,9 +322,9 @@ async function findSuccessfulBranchDeployment(
 
   // GraphQL query to get deployments and their statuses
   const query = `
-      query($owner: String!, $repo: String!, $branch: String!) {
+      query($owner: String!, $repo: String!, $env: String!) {
         repository(owner: $owner, name: $repo) {
-          deployments(last: 50, environments: ["production"], refName: $branch) {
+          deployments(last: 10, environments: [$env]) {
             nodes {
               id
               createdAt
@@ -348,7 +350,7 @@ async function findSuccessfulBranchDeployment(
   const response = await octokit.graphql<GraphQLResponse>(query, {
     owner,
     repo,
-    branch: `refs/heads/${branch}`,
+    env,
   });
 
   const deployments = response.repository.deployments.nodes;
@@ -359,9 +361,8 @@ async function findSuccessfulBranchDeployment(
   );
 
   if (successfulDeployment) {
-    core.info(`Found successful deployment for branch ${branch}:`);
+    core.info(`Found successful deployment for env: ${env}:`);
     core.info(`ID: ${successfulDeployment.id}`);
-    core.info(`Environment: ${successfulDeployment.environment}`);
     core.info(`Created at: ${successfulDeployment.createdAt}`);
 
     if (successfulDeployment.commit) {
@@ -370,7 +371,7 @@ async function findSuccessfulBranchDeployment(
       return successfulDeployment.commit.oid;
     }
   } else {
-    core.info(`No successful deployments found for branch: ${branch}`);
+    core.info(`No successful deployments found for env: ${env}`);
   }
 
   return undefined;
