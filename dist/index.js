@@ -65119,9 +65119,8 @@ function findSuccessfulBranchDeployment(owner, repo, env) {
         // Find the last successful deployment
         const successfulDeployment = deployments.find((deployment) => { var _a; return ((_a = deployment.latestStatus) === null || _a === void 0 ? void 0 : _a.state) === 'SUCCESS'; });
         if (successfulDeployment) {
-            core.info(`Found successful deployment for branch ${env}:`);
+            core.info(`Found successful deployment for env: ${env}:`);
             core.info(`ID: ${successfulDeployment.id}`);
-            core.info(`Environment: ${successfulDeployment.environment}`);
             core.info(`Created at: ${successfulDeployment.createdAt}`);
             if (successfulDeployment.commit) {
                 core.info(`Git SHA: ${successfulDeployment.commit.oid}`);
@@ -65130,7 +65129,7 @@ function findSuccessfulBranchDeployment(owner, repo, env) {
             }
         }
         else {
-            core.info(`No successful deployments found for branch: ${env}`);
+            core.info(`No successful deployments found for env: ${env}`);
         }
         return undefined;
     });

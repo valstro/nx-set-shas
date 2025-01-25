@@ -361,9 +361,8 @@ async function findSuccessfulBranchDeployment(
   );
 
   if (successfulDeployment) {
-    core.info(`Found successful deployment for branch ${env}:`);
+    core.info(`Found successful deployment for env: ${env}:`);
     core.info(`ID: ${successfulDeployment.id}`);
-    core.info(`Environment: ${successfulDeployment.environment}`);
     core.info(`Created at: ${successfulDeployment.createdAt}`);
 
     if (successfulDeployment.commit) {
@@ -372,7 +371,7 @@ async function findSuccessfulBranchDeployment(
       return successfulDeployment.commit.oid;
     }
   } else {
-    core.info(`No successful deployments found for branch: ${env}`);
+    core.info(`No successful deployments found for env: ${env}`);
   }
 
   return undefined;
