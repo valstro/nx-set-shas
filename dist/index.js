@@ -64975,7 +64975,7 @@ let BASE_DEPLOY_SHA;
     }
     core.setOutput('base', stripNewLineEndings(BASE_SHA));
     core.setOutput('head', stripNewLineEndings(HEAD_SHA));
-    core.setOutput('base-deploy', stripNewLineEndings(BASE_DEPLOY_SHA));
+    core.setOutput('base-deploy', stripNewLineEndings(BASE_DEPLOY_SHA || BASE_SHA));
 }))();
 function reportFailure(branchName) {
     core.setFailed(`
@@ -65076,7 +65076,7 @@ function commitExists(octokit, branchName, commitSha) {
  * Strips LF line endings from given string
  */
 function stripNewLineEndings(string) {
-    return string.replace('\n', '');
+    return (string === null || string === void 0 ? void 0 : string.replace('\n', '')) || '';
 }
 /**
  * Find last successful deployment on the branch
