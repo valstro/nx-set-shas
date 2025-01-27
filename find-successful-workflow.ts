@@ -158,7 +158,7 @@ let BASE_DEPLOY_SHA: string;
   }
   core.setOutput('base', stripNewLineEndings(BASE_SHA));
   core.setOutput('head', stripNewLineEndings(HEAD_SHA));
-  core.setOutput('base-deploy', stripNewLineEndings(BASE_DEPLOY_SHA));
+  core.setOutput('base-deploy', stripNewLineEndings(BASE_DEPLOY_SHA || BASE_SHA));
 })();
 
 function reportFailure(branchName: string): void {
@@ -287,7 +287,7 @@ async function commitExists(
  * Strips LF line endings from given string
  */
 function stripNewLineEndings(string: string): string {
-  return string.replace('\n', '');
+  return string?.replace('\n', '') || '';
 }
 
 /**
