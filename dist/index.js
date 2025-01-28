@@ -64906,8 +64906,11 @@ let BASE_DEPLOY_SHA;
             : '';
         const prEnv = `dev-${github.context.payload.pull_request.number}`;
         const deployResult = yield findSuccessfulBranchDeployment(owner, repo, prEnv);
-        BASE_DEPLOY_SHA = deployResult;
-        if (!deployResult) {
+        const test = (0, child_process_1.spawnSync)('git', ['merge-base', deployResult, `origin/${branch}`], { encoding: 'utf-8' });
+        if (deployResult == test.stdout) {
+            BASE_DEPLOY_SHA = deployResult;
+        }
+        else {
             const baseResult = (0, child_process_1.spawnSync)('git', ['merge-base', `origin/${mainBranchName}`, `origin/${branch}`], { encoding: 'utf-8' });
             BASE_DEPLOY_SHA = baseResult.stdout;
         }
@@ -64975,7 +64978,7 @@ let BASE_DEPLOY_SHA;
     }
     core.setOutput('base', stripNewLineEndings(BASE_SHA));
     core.setOutput('head', stripNewLineEndings(HEAD_SHA));
-    core.setOutput('base-deploy', stripNewLineEndings(BASE_DEPLOY_SHA || BASE_SHA));
+    core.setOutput('base-deploy', stripNewLineEndings(BASE_DEPLOY_SHA));
 }))();
 function reportFailure(branchName) {
     core.setFailed(`

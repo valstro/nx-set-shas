@@ -64,9 +64,15 @@ let BASE_DEPLOY_SHA: string;
       prEnv,
     );
 
-    BASE_DEPLOY_SHA = deployResult;
+    const test = spawnSync(
+      'git',
+      ['merge-base', deployResult, `origin/${branch}`],
+      { encoding: 'utf-8' },
+    );
 
-    if (!deployResult) {
+    if (deployResult == test.stdout) {
+      BASE_DEPLOY_SHA = deployResult;
+    } else {
       const baseResult = spawnSync(
         'git',
         ['merge-base', `origin/${mainBranchName}`, `origin/${branch}`],
@@ -158,7 +164,7 @@ let BASE_DEPLOY_SHA: string;
   }
   core.setOutput('base', stripNewLineEndings(BASE_SHA));
   core.setOutput('head', stripNewLineEndings(HEAD_SHA));
-  core.setOutput('base-deploy', stripNewLineEndings(BASE_DEPLOY_SHA || BASE_SHA));
+  core.setOutput('base-deploy', stripNewLineEndings(BASE_DEPLOY_SHA));
 })();
 
 function reportFailure(branchName: string): void {
